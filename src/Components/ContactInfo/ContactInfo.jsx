@@ -74,13 +74,14 @@ const ContactInfo = ({ checked, contactId, name, phoneNumber, tags, onClickHandl
       <Grid item xs={7}>
         <AddTags>
           <Tags>
-            {tags.map(({ name }) => (
+            {tags.map(({ name }, index) => (
               <Chip
                 label={name}
                 variant="outlined"
                 color="primary"
                 onClick={() => {}}
                 onDelete={() => {}}
+                key={`${name}-${index}`}
               />
             ))}
           </Tags>

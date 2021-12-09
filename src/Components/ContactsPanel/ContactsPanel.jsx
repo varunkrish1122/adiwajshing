@@ -103,6 +103,9 @@ const ContactsPanel = ({}) => {
       setRenderContacts(newRenderContacts);
   };
   useEffect(() => {
+    renderContactList()
+  }, [searchItem])
+  useEffect(() => {
     const contactServices = new ContactServices();
     contactServices.getAllContact().then((response) => {
       const { data = {} } = response;
@@ -180,7 +183,7 @@ const ContactsPanel = ({}) => {
           </div>
           <ExportAll>Export All</ExportAll>
         </Grid>
-        {renderContacts.map(({ checked, id, name, phoneNumber, tags }) => (
+        {renderContacts.map(({ checked, id, name, phoneNumber, tags }, index) => (
           <ContactInfo
             checked={checked}
             contactId={id}
@@ -188,6 +191,7 @@ const ContactsPanel = ({}) => {
             phoneNumber={phoneNumber}
             tags={tags}
             onClickHandler={() => onContactSelectHandler(id)}
+            key={`${name}-${index}`}
           />
         ))}
       </Grid>

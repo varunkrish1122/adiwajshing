@@ -57,8 +57,8 @@ const FilterTagsTable = ({ tableTitle, returnSelectedTags, tags }) => {
       <StyledTagTitle>{tableTitle}:</StyledTagTitle>
       <Table aria-label="tags-table">
         <TableBody>
-          {[...tags, {}].map(({ name, checked }) => (
-            <StyledTableRow key={name}>
+          {[...tags, {}].map(({ name, checked }, index) => (
+            <StyledTableRow key={`${name}-${index}`}>
               <StyledTableCell component="th" scope="row">
                 {name}
               </StyledTableCell>
