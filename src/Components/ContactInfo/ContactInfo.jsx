@@ -43,9 +43,9 @@ const ContactInfo = ({ checked, contactId, name, phoneNumber, tags, onClickHandl
       cursor: "pointer",
       padding:8,
       borderBottom: '1px solid #cfcfcf',
-      backgroundColor: checked ? '#f5efef' : 'inherit',
+      backgroundColor: checked ? 'rgb(193 203 223)' : 'inherit',
       "&:hover": {
-        backgroundColor: "#f5efef",
+        backgroundColor: "#dcecee",
       },
     },
   });
@@ -85,7 +85,7 @@ const ContactInfo = ({ checked, contactId, name, phoneNumber, tags, onClickHandl
               />
             ))}
           </Tags>
-          <AddCircleIcon style={{ color: "#64b5b9" }} />
+          <AddCircleIcon style={{ color: "#09a391" }} />
         </AddTags>
       </Grid>
     </Grid>

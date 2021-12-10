@@ -1,4 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { debounce } from "lodash";
 import styled from "@emotion/styled";
 import Card from "@material-ui/core/Card";
@@ -11,7 +18,7 @@ import SearchIcon from "@material-ui/icons/Search";
 import { cardStyles } from "../Components.styled";
 import CheckBox from "../CheckBox/CheckBox";
 import ContactInfo from "../ContactInfo/ContactInfo";
-import ContactServices from "../../Services/ContactServices";
+import { Creators as contactActions } from "../../store/actions/contactsActions";
 import "./ContactsPanel.css";
 
 const useStyles = makeStyles((theme) => ({
@@ -57,7 +64,7 @@ const ExportAll = styled.button({
   fontSize: "16px",
   borderRadius: "8px",
   border: "none",
-  backgroundColor: "#52ad9e",
+  backgroundColor: "#09a391",
   color: "white",
   fontWeight: 500,
   cursor: "pointer",
@@ -70,11 +77,18 @@ const ContactsText = styled("h3")`
 `;
 
 const ContactsPanel = ({}) => {
+  const dispatch = useDispatch();
   const cardClasses = cardStyles();
   const classes = useStyles();
-  const [contacts, setContacts] = useState([]);
+  const { totalCount, nextPage } = useSelector(
+    (state) => state?.contactsData?.contactsSucess
+  );
+  let contacts = useSelector(
+    (state) => state?.contactsData?.contactsSucess?.contacts
+  );
+  // const [contacts, setContacts] = useState(useSelector((state) => state?.contactsData?.contactsSucess?.contacts));
   const [searchItem, setSearchItem] = useState("");
-  const [renderContacts, setRenderContacts] = useState(contacts);
+  const [renderContacts, setRenderContacts] = useState([]);
   const handleChange = (event) => {
     setSearchItem(event.target.value);
   };
@@ -87,47 +101,62 @@ const ContactsPanel = ({}) => {
     );
     const contactInfo = contacts[contactInfoIndex];
     const { checked } = contactInfo;
-    if (checked) {
-      contactInfo["checked"] = false;
-    } else {
-      contactInfo["checked"] = true;
-    }
+    contactInfo["checked"] = !checked;
     contacts[contactInfoIndex] = contactInfo;
-    setContacts(contacts);
+    // setContacts(contacts);
     renderContactList();
   };
   const renderContactList = () => {
     const newRenderContacts = contacts.filter(({ name }) =>
-        name.toLowerCase().includes(searchItem.toLowerCase())
-      );
-      setRenderContacts(newRenderContacts);
+      name.toLowerCase().includes(searchItem.toLowerCase())
+    );
+    setRenderContacts(newRenderContacts);
   };
   useEffect(() => {
-    renderContactList()
-  }, [searchItem])
+    renderContactList();
+  }, [contacts]);
   useEffect(() => {
-    const contactServices = new ContactServices();
-    contactServices.getAllContact().then((response) => {
-      const { data = {} } = response;
-      const { contacts = [] } = data;
-      setContacts(contacts);
-      setRenderContacts(contacts)
-    });
+    renderContactList();
+  }, [searchItem]);
+  useEffect(() => {
+    const requestParmas = {
+      returnTotalCount: true,
+    };
+    dispatch(contactActions.contactsRequest(requestParmas));
     return () => {
       debounceSearchHandler.cancel();
     };
   }, []);
-  const allContactsSelected = contacts.every(({ checked }) => !!checked);
+  const allContactsSelected = renderContacts.every(({ checked }) => !!checked);
   const allContactsSelectedHandler = () => {
     let newContacts = [];
     if (allContactsSelected) {
-      newContacts = contacts.map((obj) => ({ ...obj, checked: false }));
+      newContacts = renderContacts.map((obj) => ({ ...obj, checked: false }));
     } else {
-      newContacts = contacts.map((obj) => ({ ...obj, checked: true }));
+      newContacts = renderContacts.map((obj) => ({ ...obj, checked: true }));
     }
-    setContacts(newContacts);
-    setRenderContacts(newContacts)
+    // setContacts(newContacts);
+    contacts = newContacts;
+    setRenderContacts(newContacts);
   };
+
+  // Infinite Scroll We can Write Hook as well
+  const observer = useRef();
+  const referenceDiv = useCallback((node) => {
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        const [element1, element2] = nextPage ? JSON.parse(nextPage) : "";
+        const page = `["${element1}",${element2}]`;
+        const requestParmas = {
+          returnTotalCount: true,
+          page: page,
+        };
+        dispatch(contactActions.updateRequest(requestParmas));
+      }
+    });
+    if (node) observer.current.observe(node);
+  });
   return (
     <Card className={cardClasses.root}>
       <Grid
@@ -144,7 +173,7 @@ const ContactsPanel = ({}) => {
           alignItems="center"
           wrap="nowrap"
         >
-          <ContactsText>All Contacts({contacts.length})</ContactsText>
+          <ContactsText>All Contacts({totalCount})</ContactsText>
         </Grid>
         <Grid item xs={1} style={{ textAlign: "right" }}>
           <AddCircleIcon style={{ color: "#64b5b9" }} />
@@ -183,17 +212,23 @@ const ContactsPanel = ({}) => {
           </div>
           <ExportAll>Export All</ExportAll>
         </Grid>
-        {renderContacts.map(({ checked, id, name, phoneNumber, tags }, index) => (
-          <ContactInfo
-            checked={checked}
-            contactId={id}
-            name={name}
-            phoneNumber={phoneNumber}
-            tags={tags}
-            onClickHandler={() => onContactSelectHandler(id)}
-            key={`${name}-${index}`}
-          />
-        ))}
+        {renderContacts.map(
+          ({ checked, id, name, phoneNumber, tags }, index) => (
+            <div
+              {...(index === contacts.length - 7 ? { ref: referenceDiv } : {})}
+              key={`${name}-${index}`}
+            >
+              <ContactInfo
+                checked={checked}
+                contactId={id}
+                name={name}
+                phoneNumber={phoneNumber}
+                tags={tags}
+                onClickHandler={() => onContactSelectHandler(id)}
+              />
+            </div>
+          )
+        )}
       </Grid>
     </Card>
   );

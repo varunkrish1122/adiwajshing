@@ -1,9 +1,11 @@
 import React, {useEffect} from 'react';
+import {Provider} from 'react-redux';
 import './App.css';
 
 import Content from './Components/Content/Content';
 import AuthService from './Services/api/AuthService';
 import TokenService from './Services/api/TokenService';
+import store from './store'
 
 const teamId = 'a001994b-918b-4939-8518-3377732e4e88';
 const refreshToken = '059c420e-7424-431f-b23b-af0ecabfe7b8';
@@ -22,9 +24,11 @@ function App() {
     });
   }, [])
   return (
+    <Provider store={store}>
     <div className="App">
       <Content />
     </div>
+    </Provider>
   );
 }
 

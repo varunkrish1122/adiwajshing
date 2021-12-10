@@ -1,45 +1,97 @@
 import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import styled from "@emotion/styled";
 import Card from "@material-ui/core/Card";
 import Grid from "@material-ui/core/Grid";
 import FormatAlignCenterIcon from "@material-ui/icons/FormatAlignCenter";
+import TextField from "@material-ui/core/TextField";
 
 import { AudienceText, GreyText, cardStyles } from "../Components.styled";
 import FilterTagsTable from "../FilterTagsTable/FilterTagsTable";
+import { Creators as tagActions } from "../../store/actions/tagsActions";
+import { StyledTagTitle } from "../Components.styled";
+import { Creators as contactActions } from "../../store/actions/contactsActions";
 import ContactServices from "../../Services/ContactServices";
 
 import "./FilterPanel.css";
 
+const numCheck= (event) => {
+var keyCode = event.keyCode;
+if (keyCode > 31 &&(keyCode <48 || keyCode >57)) event.preventDefault()
+}
 const StyledButton = styled.button({
   padding: "8px 8px",
   width: "90%",
   fontSize: "16px",
   borderRadius: "8px",
   border: "none",
-  backgroundColor: "#52ad9e",
-  position: "relative",
-  top: "90px",
+  backgroundColor: "#09a391",
   color: "white",
   fontWeight: 500,
   cursor: "pointer",
 });
-const TagsDiv = styled.div({
-  maxHeight: 600,
-  overflow: "auto",
-});
+const TagsDiv = styled.div({});
 const FilterPanel = ({}) => {
-  const [includeTags, setIncludeTags] = useState([]);
-  const [excludeTags, setExcludeTags] = useState([]);
+  const dispatch = useDispatch();
+  let includeTags = [];
+  let excludeTags = [];
+  const [minMax, setMinMax] = useState({
+    minMessagesSent: 0,
+    minMessagesRecv: 0,
+    maxMessagesSent: 0,
+    maxMessagesRecv: 0
+  });
+
+  const { totalCount } = useSelector(
+    (state) => state?.contactsData?.contactsSucess
+  );
   const cardClasses = cardStyles();
+  const onChangeHandler = (event, key) => {
+    const value = event.target.value;
+    setMinMax({...minMax, [key]: value})
+  }
   useEffect(() => {
-    const contactServices = new ContactServices();
-    contactServices.getAllTags().then((response) => {
-      const { data = {} } = response;
-      const { tags = [] } = data;
-      setIncludeTags(tags);
-      setExcludeTags(tags);
-    });
+    dispatch(tagActions.tagsRequest());
   }, []);
+  
+  const saveFilters = () => {
+    // const notTags = excludeTags.reduce((acc, {name}, index) => {
+    //   return `${name}`+(index > (excludeTags.length - 1) ? '' : '&notTags=')
+    // }, '');
+    const includeTagsQuery = includeTags.reduce((acc, {name}, index) => {
+      return `${name}`+(index > (excludeTags.length - 1) ? '' : '&tags=')
+    }, '');
+    const getMinMaxParams = () => {
+      const {
+        minMessagesSent,
+        minMessagesRecv,
+        maxMessagesSent,
+        maxMessagesRecv
+      } = minMax;
+      return{
+      ...(!!minMessagesRecv ? {minMessagesRecv} : {}),
+      ...(!!maxMessagesRecv ? {maxMessagesRecv} : {}),
+      ...(!!maxMessagesSent ? {maxMessagesSent} : {}),
+      ...(!!minMessagesSent ? {minMessagesSent} : {}),
+    }
+  }
+    const requestParmas = {
+      returnTotalCount: true,
+      ...getMinMaxParams(),
+      // ...(!!notTags ? {notTags} : {}),
+      ...(!!includeTagsQuery ? {tags: includeTagsQuery} : {})
+    };
+    dispatch(contactActions.contactsRequest(requestParmas));
+  };
+
+  // const setTagFilter = (data, type) => {
+  //   if(type === 'include'){
+  //     includeTags = data;
+  //   }else{
+  //     excludeTags = data
+  //   }
+  // };
+
   return (
     <Card className={cardClasses.root}>
       <Grid
@@ -51,7 +103,7 @@ const FilterPanel = ({}) => {
         <Grid
           container
           direction="row"
-          xs={8}
+          xs={7}
           display="flex"
           alignItems="center"
           wrap="nowrap"
@@ -59,15 +111,75 @@ const FilterPanel = ({}) => {
           <FormatAlignCenterIcon />
           <AudienceText>Audience</AudienceText>
         </Grid>
-        <Grid item xs={4}>
-          <GreyText>100 Contacts</GreyText>
+        <Grid item xs={5}>
+          <GreyText>{totalCount} Contacts</GreyText>
         </Grid>
       </Grid>
       <TagsDiv>
-        <FilterTagsTable tableTitle="Included Tags" tags={includeTags} />
-        <FilterTagsTable tableTitle="Excluded Tags" tags={excludeTags} />
+        <FilterTagsTable
+          tableTitle="Included Tags"
+          // tags={includeTags}
+          tagType="include"
+          // setTagFilter={setTagFilter}
+        />
+        <FilterTagsTable
+          tableTitle="Excluded Tags"
+          // tags={excludeTags}
+          tagType="exclude"
+          // setTagFilter={setTagFilter}
+        />
       </TagsDiv>
-      <StyledButton>Save Filters</StyledButton>
+      <div style={{ padding: "16px 0 8px" }}>
+        <StyledTagTitle>Message Sent:</StyledTagTitle>
+        <Grid container display="row" spacing={2}>
+          <Grid item xs={6}>
+            <TextField
+              id="filled-basic"
+              label="Min"
+              variant="filled"
+              inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+              onKeyDown={numCheck}
+              onChange={(event) => onChangeHandler(event, 'minMessagesSent')}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              id="filled-basic"
+              label="Max"
+              variant="filled"
+              inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+              onKeyDown={numCheck}
+              onChange={(event) => onChangeHandler(event, 'maxMessagesSent')}
+            />
+          </Grid>
+        </Grid>
+      </div>
+      <div style={{ padding: "16px 0 8px" }}>
+        <StyledTagTitle>Message Received:</StyledTagTitle>
+        <Grid container display="row" spacing={2}>
+          <Grid item xs={6}>
+            <TextField
+              id="filled-basic"
+              label="Min"
+              variant="filled"
+              inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+              onKeyDown={numCheck}
+              onChange={(event) => onChangeHandler(event, 'minMessagesRecv')}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              id="filled-basic"
+              label="Max"
+              variant="filled"
+              inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+              onKeyDown={numCheck}
+              onChange={(event) => onChangeHandler(event, 'maxMessagesRecv')}
+            />
+          </Grid>
+        </Grid>
+      </div>
+      <StyledButton onClick={saveFilters}>Save Filters</StyledButton>
     </Card>
   );
 };

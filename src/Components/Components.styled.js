@@ -20,6 +20,13 @@ export const cardStyles = makeStyles({
         backgroundColor: 'white',
         padding: 8,
         marginRight: 3,
+        height: '100%',
         boxShadow: '1px 1px 3px 1px #ffffff66'
     },
 });
+
+export const StyledTagTitle = styled.div({
+    fontWeight: "bold",
+    textAlign: "left",
+    marginBottom: 8,
+  });
