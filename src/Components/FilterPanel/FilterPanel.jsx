@@ -11,7 +11,6 @@ import FilterTagsTable from "../FilterTagsTable/FilterTagsTable";
 import { Creators as tagActions } from "../../store/actions/tagsActions";
 import { StyledTagTitle } from "../Components.styled";
 import { Creators as contactActions } from "../../store/actions/contactsActions";
-import ContactServices from "../../Services/ContactServices";
 
 import "./FilterPanel.css";
 
@@ -33,8 +32,8 @@ const StyledButton = styled.button({
 const TagsDiv = styled.div({});
 const FilterPanel = ({}) => {
   const dispatch = useDispatch();
-  let includeTags = [];
-  let excludeTags = [];
+  const [includeTags, setIncludeTags] = useState([])
+  const [excludeTags, setExcludeTags] = useState([])
   const [minMax, setMinMax] = useState({
     minMessagesSent: 0,
     minMessagesRecv: 0,
@@ -55,11 +54,11 @@ const FilterPanel = ({}) => {
   }, []);
   
   const saveFilters = () => {
-    // const notTags = excludeTags.reduce((acc, {name}, index) => {
-    //   return `${name}`+(index > (excludeTags.length - 1) ? '' : '&notTags=')
-    // }, '');
+    const notTags = excludeTags.reduce((acc, {name}, index) => {
+      return `${acc}${name}`+(index === (excludeTags.length - 1) ? '' : '&notTags=')
+    }, '');
     const includeTagsQuery = includeTags.reduce((acc, {name}, index) => {
-      return `${name}`+(index > (excludeTags.length - 1) ? '' : '&tags=')
+      return `${acc}${name}`+(index === (includeTags.length - 1) ? '' : '&tags=')
     }, '');
     const getMinMaxParams = () => {
       const {
@@ -78,19 +77,19 @@ const FilterPanel = ({}) => {
     const requestParmas = {
       returnTotalCount: true,
       ...getMinMaxParams(),
-      // ...(!!notTags ? {notTags} : {}),
+      ...(!!notTags ? {notTags} : {}),
       ...(!!includeTagsQuery ? {tags: includeTagsQuery} : {})
     };
     dispatch(contactActions.contactsRequest(requestParmas));
   };
 
-  // const setTagFilter = (data, type) => {
-  //   if(type === 'include'){
-  //     includeTags = data;
-  //   }else{
-  //     excludeTags = data
-  //   }
-  // };
+  const setTagFilter = (data, type) => {
+    if(type === 'include'){
+      setIncludeTags(data)
+    }else{
+      setExcludeTags(data)
+    }
+  };
 
   return (
     <Card className={cardClasses.root}>
@@ -118,15 +117,13 @@ const FilterPanel = ({}) => {
       <TagsDiv>
         <FilterTagsTable
           tableTitle="Included Tags"
-          // tags={includeTags}
           tagType="include"
-          // setTagFilter={setTagFilter}
+          setTagFilter={setTagFilter}
         />
         <FilterTagsTable
           tableTitle="Excluded Tags"
-          // tags={excludeTags}
           tagType="exclude"
-          // setTagFilter={setTagFilter}
+          setTagFilter={setTagFilter}
         />
       </TagsDiv>
       <div style={{ padding: "16px 0 8px" }}>
@@ -140,6 +137,7 @@ const FilterPanel = ({}) => {
               inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
               onKeyDown={numCheck}
               onChange={(event) => onChangeHandler(event, 'minMessagesSent')}
+              size="small"
             />
           </Grid>
           <Grid item xs={6}>
@@ -150,6 +148,7 @@ const FilterPanel = ({}) => {
               inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
               onKeyDown={numCheck}
               onChange={(event) => onChangeHandler(event, 'maxMessagesSent')}
+              size="small"
             />
           </Grid>
         </Grid>
@@ -165,6 +164,7 @@ const FilterPanel = ({}) => {
               inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
               onKeyDown={numCheck}
               onChange={(event) => onChangeHandler(event, 'minMessagesRecv')}
+              size="small"
             />
           </Grid>
           <Grid item xs={6}>
@@ -175,6 +175,7 @@ const FilterPanel = ({}) => {
               inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
               onKeyDown={numCheck}
               onChange={(event) => onChangeHandler(event, 'maxMessagesRecv')}
+              size="small"
             />
           </Grid>
         </Grid>

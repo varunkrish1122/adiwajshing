@@ -4,7 +4,6 @@ class ContactServices {
     getAllContact(params){
         return axios.get('/contacts', {
             params,
-            // paramsSerializer: params => qs.stringify(params, {encode: false, indices: false}, null, { encodeURIComponent: qs.unescape })
         })
     }
 

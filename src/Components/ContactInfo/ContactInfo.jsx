@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import {noop} from 'lodash';
+import { noop } from "lodash";
 import styled from "@emotion/styled";
 import { makeStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
-import Chip from "@mui/material/Chip";
+import CancelIcon from "@material-ui/icons/Cancel";
 
 import CheckBox from "../CheckBox/CheckBox";
 
@@ -27,6 +27,25 @@ const Tags = styled.div({
   marginRight: 24,
 });
 
+const Chip = styled.div({
+  backgroundColor: "#10a6df",
+  color: "white",
+  display: "flex",
+  flexDirection: "row",
+  alignContent: "center",
+  alignItems: "center",
+  padding: "0 4px",
+  borderRadius: 16,
+  fontSize: 14,
+});
+
+const ChipSpan = styled.div({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  padding: "0 12px",
+  whiteSpace: "nowrap",
+});
+
 const ContactDiv = styled.div`
   display: flex;
   align-items: flex-start;
@@ -37,13 +56,20 @@ const ContactDiv = styled.div`
 `;
 const defaultUrl =
   "https://www.clipartmax.com/png/middle/171-1717870_stockvader-predicted-cron-for-may-user-profile-icon-png.png";
-const ContactInfo = ({ checked, contactId, name, phoneNumber, tags, onClickHandler=noop }) => {
+const ContactInfo = ({
+  checked,
+  contactId,
+  name,
+  phoneNumber,
+  tags,
+  onClickHandler = noop,
+}) => {
   const useStyles = makeStyles({
     root: {
       cursor: "pointer",
-      padding:8,
-      borderBottom: '1px solid #cfcfcf',
-      backgroundColor: checked ? 'rgb(193 203 223)' : 'inherit',
+      padding: 8,
+      borderBottom: "1px solid #cfcfcf",
+      backgroundColor: checked ? "rgb(193 203 223)" : "inherit",
       "&:hover": {
         backgroundColor: "#dcecee",
       },
@@ -75,14 +101,10 @@ const ContactInfo = ({ checked, contactId, name, phoneNumber, tags, onClickHandl
         <AddTags>
           <Tags>
             {tags.map(({ name }, index) => (
-              <Chip
-                label={name}
-                variant="outlined"
-                color="primary"
-                onClick={() => {}}
-                onDelete={() => {}}
-                key={`${name}-${index}`}
-              />
+              <Chip key={`${name}-${index}`}>
+                <ChipSpan>{name}</ChipSpan>
+                <CancelIcon style={{ fontSize: "inherit" }} />
+              </Chip>
             ))}
           </Tags>
           <AddCircleIcon style={{ color: "#09a391" }} />
